@@ -1,45 +1,88 @@
+/*
+  DDR2 Core Driver Module
 
-`timescale 1 ps/1 ps
+  Designer: Ahmed Abdelazeem
 
+  History:
+  - Version 1.0: Initial release (Date: [Insert Date])
+  
+  Description:
+  This Verilog module, designed by Ahmed Abdelazeem, serves as a controller for communication between a host and an external DDR2 memory. It implements a state machine and address counter to manage read and write operations, utilizing FIFO handshaking for efficient data transfer.
+
+  Parameters:
+  - VDATA_NUM: Number of vertical data lines.
+  - HDATA_NUM: Number of horizontal data lines.
+  - MAX_ROW: Maximum value for the row address (2^(row bits) - 1).
+  - MAX_COL: Maximum value for the column address (2^(column bits) - (LOCAL_BURST_LEN_s * dwidth_ratio)).
+  - MAX_BANK: Maximum value for the bank address.
+  - MAX_CHIPSEL: Maximum value for the memory chip select address.
+  - MIN_CHIPSEL: Minimum value for the memory chip select address.
+
+  Inputs:
+  - clk: Clock input.
+  - rst_n: Active-low asynchronous reset input.
+  - to_ddr2_strb: Strobe signal to write one buffer.
+  - to_ddr2_req: Request signal to write data to DDR2.
+  - to_ddr2_data: Data input to be written to DDR2.
+  - from_ddr2_strb: Strobe signal to read one line of image data.
+  
+  Outputs:
+  - from_ddr2_data: Output data read from DDR2.
+  - from_ddr2_data_valid: Valid signal for the output data.
+  - buf_id: Indicates which buffer is being used in the current operation.
+  - local_bank_addr: Bank address for DDR2 core interface.
+  - local_be: Byte enables for DDR2 core interface.
+  - local_burstbegin: Indicates the beginning of a burst operation.
+  - local_col_addr: Column address for DDR2 core interface.
+  - local_cs_addr: Chip select address for DDR2 core interface.
+  - local_read_req: Read request signal for DDR2 core interface.
+  - local_row_addr: Row address for DDR2 core interface.
+  - local_size: Size signal for DDR2 core interface.
+  - local_wdata: Write data for DDR2 core interface.
+  - local_write_req: Write request signal for DDR2 core interface.
+
+  Module Structure:
+  The module is organized into sections, including parameters, inputs, outputs, internal signals, and processes. It implements a state machine for read and write control, an address generator process, and other supporting logic for efficient DDR2 communication.
+
+  Note: [Insert any additional important notes or considerations here.]
+
+  (C) [Insert Year] Ahmed Abdelazeem. All rights reserved.
+*/
 
 module ddr2_core_driver #(
-	parameter VDATA_NUM	= 64,	
-	parameter HDATA_NUM	= 4,
-	parameter MAX_ROW	= 256,  // Maximum value is 2^(row bits) -1, while minimum value is 0
-	parameter MAX_COL 	= 16, // Maximum value is 2^(column bits) - (LOCAL_BURST_LEN_s * dwidth_ratio (aka half-rate (4) or full-rate (2))), while minimum value is 0 for Half rate and (LOCAL_BURST_LEN_s * dwidth_ratio) for Full rate
-	parameter MAX_BANK 	= 4,  // Decrease MAX_BANK to test lesser bank address, minimum value is 0
-	parameter MAX_CHIPSEL = 0, //Decrease MAX_CHIPSEL to test lesser memory chip, minimum value is MIN_CHIPSEL
-	parameter MIN_CHIPSEL = 0
-	)(
-	input            	clk,
-	input            	rst_n,
-	
-	// data operation with fifo handshake
-	// these data write to ddr2
-	input				to_ddr2_strb,	// write one buffer when receive a strobe signal
-	input				to_ddr2_req,				
-	input	[23:0]		to_ddr2_data,
-	// load data from ddr2 via these signals
-	input				from_ddr2_strb,	// get one line image data in each strobe signal
-	output  reg [23:0] 	from_ddr2_data,
-	output	reg			from_ddr2_data_valid,
-	output	reg	[1:0]	buf_id,		// indicate which buffer using on current operation
-	
-	// ddr2 core interface
-	input	[31:0] 		local_rdata,
-	input            	local_rdata_valid,
-	input            	local_ready,
-	output  [2:0] 		local_bank_addr,
-	output  [3:0] 		local_be,
-	output           	local_burstbegin,
-	output  [9:0] 		local_col_addr,
-	output           	local_cs_addr,
-	output           	local_read_req,
-	output  [15:0] 		local_row_addr,
-	output  [2:0] 		local_size,
-	output  [31:0] 		local_wdata,
-	output           	local_write_req
+    parameter VDATA_NUM	= 64,
+    parameter HDATA_NUM	= 4,
+    parameter MAX_ROW	= 256,
+    parameter MAX_COL 	= 16,
+    parameter MAX_BANK 	= 4,
+    parameter MAX_CHIPSEL = 0,
+    parameter MIN_CHIPSEL = 0
+)(
+    // Inputs
+    input            	clk,
+    input            	rst_n,
+    input				to_ddr2_strb,
+    input				to_ddr2_req,
+    input	[23:0]		to_ddr2_data,
+    input				from_ddr2_strb,
+    
+    // Outputs
+    output  reg [23:0] 	from_ddr2_data,
+    output	reg			from_ddr2_data_valid,
+    output	reg	[1:0]	buf_id,
+    output  [2:0] 		local_bank_addr,
+    output  [3:0] 		local_be,
+    output           	local_burstbegin,
+    output  [9:0] 		local_col_addr,
+    output           	local_cs_addr,
+    output           	local_read_req,
+    output  [15:0] 		local_row_addr,
+    output  [2:0] 		local_size,
+    output  [31:0] 		local_wdata,
+    output           	local_write_req
 );
+
+
 
 	wire    [2:0] 		LOCAL_BURST_LEN_s;
 	reg					reset_address;
