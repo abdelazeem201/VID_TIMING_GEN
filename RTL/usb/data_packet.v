@@ -1,4 +1,11 @@
-
+////////////////////////////////////////////////////////////////////////////////
+// Module: data_packet
+// Description: Verilog module for assembling a 24-bit data packet from a
+//              stream of 8-bit data bytes. The module includes a byte counter
+//              to keep track of the byte being processed and generate a valid
+//              signal when a complete packet is formed.
+// Designer: Ahmed Abdelazeem
+////////////////////////////////////////////////////////////////////////////////
 
 module data_packet (
 	input				clk,
@@ -11,6 +18,7 @@ module data_packet (
 
 	reg		[1:0]	byte_cnt;
 	
+	// Byte counter logic
 	always @ (posedge clk or negedge rst_n)
 		if(!rst_n)
 			byte_cnt <= 2'b00;
@@ -19,6 +27,7 @@ module data_packet (
 		else if(data_byte_valid)
 			byte_cnt <= byte_cnt + 1'b1;
 
+	// Data packing logic
 	always @ (posedge clk)
 		case(byte_cnt)
 			0: pack_data[7:0] 	<= data_byte;
@@ -27,6 +36,7 @@ module data_packet (
 			default pack_data 	<= 24'd0;
 		endcase
 
+	// Packet valid signal generation
 	always @ (posedge clk or negedge rst_n)
 		if(!rst_n)		
 			pack_data_valid <= 1'b0;
@@ -36,5 +46,3 @@ module data_packet (
 			pack_data_valid <= 1'b0;
 			
 endmodule
-			
-	
