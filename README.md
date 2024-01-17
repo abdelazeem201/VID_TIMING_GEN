@@ -21,7 +21,7 @@ interlaced formats)
 * Digital TV and multimedia solutions
 
 ## Diagram
-![Diagram](dlp_top.svg "Diagram")
+![Diagram](https://github.com/abdelazeem201/VID_TIMING_GEN/blob/main/pics/dlp_top.svg "Diagram")
 ## Ports
 
 | Port name | Direction | Type   | Description |
