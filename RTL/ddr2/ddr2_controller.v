@@ -1,4 +1,12 @@
-`timescale 1 ps/1 ps
+////////////////////////////////////////////////////////////////////////////////
+// Module: ddr2_controller
+// Description: Verilog module for controlling communication between a host and
+//              an external DDR2 memory. It includes interfaces for data writes
+//              and reads, along with signals for managing the DDR2 port.
+// Designer: Ahmed Abdelazeem
+// Version: 1.0
+// Date: January 1, 2024
+////////////////////////////////////////////////////////////////////////////////
 
 module ddr2_controller (
 	input				clk,
@@ -206,4 +214,4 @@ module ddr2_controller (
 		.soft_reset_n (tie_high)
     );
 
-	endmodule 
+endmodule
