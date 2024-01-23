@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////
 // dlpc300_config_intf Module
-// Author: [Designer Name]
+    // Author: Ahmed Abdelazeem
 // Description: Verilog module for a configuration interface between
 // a DLPC300 device and a master device using the Wishbone bus and I2C.
 /////////////////////////////////////////////////////////////////////
