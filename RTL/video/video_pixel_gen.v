@@ -1,95 +1,102 @@
-`timescale 1ns/10ps
+/////////////////////////////////////////////////////////////////////
+// video_pixel_gen Module
+// Author: Ahmed Abdelazeem
+// Description: Verilog module for generating video pixel signals
+// based on timing and control signals. It includes a pixel clock
+// generator (video_clkgen) and a timing generator (video_timgen).
+/////////////////////////////////////////////////////////////////////
+
 module video_pixel_gen (
-	input 			clk,
-	input			rst_n,
-	
-	// video signal control
-	input 			ctrl_ven,    	// video enable signal
-	input        	ctrl_hsync_pol, // horizontal sync pulse polarization level (0: active high; 1: active low)
-	input        	ctrl_vsync_pol, // vertical sync pulse polarization level (0: active high; 1: active low)
-	input 			ctrl_blank_pol, // blank signal polarization level (0: active high; 1: active low)
-	input 			ctrl_daten_pol, // data enable signal polarization level (0: active high; 1: active low)
+    input 			clk,           // Input clock
+    input			rst_n,         // Active-low asynchronous reset signal
 
-	// horizontal timing settings
-	input 	[ 7:0] 	Thsync, // horizontal sync pulse width (in pixels)
-	input 	[ 7:0] 	Thgdel,	// horizontal gate delay (in pixels)
-	input 	[15:0] 	Thgate, // horizontal gate length (number of visible pixels per line)
-	input 	[15:0] 	Thlen,  // horizontal length (number of pixels per line)
+    // Video signal control
+    input 			ctrl_ven,      // Video enable signal
+    input        	ctrl_hsync_pol, // Horizontal sync pulse polarization level (0: active high; 1: active low)
+    input        	ctrl_vsync_pol, // Vertical sync pulse polarization level (0: active high; 1: active low)
+    input 			ctrl_blank_pol, // Blanking signal polarization level (0: active high; 1: active low)
+    input 			ctrl_daten_pol, // Data enable signal polarization level (0: active high; 1: active low)
 
-	// vertical timing settings
-	input 	[ 7:0] 	Tvsync, // vertical sync pulse width (in lines)
-	input 	[ 7:0] 	Tvgdel, // vertical gate delay (in lines)
-	input 	[15:0] 	Tvgate, // vertical gate length (number of visible lines in frame)
-	input	[15:0] 	Tvlen,  // vertical length (number of lines in frame)
+    // Horizontal timing settings
+    input 	[ 7:0] 	Thsync,   // Horizontal sync pulse width (in pixels)
+    input 	[ 7:0] 	Thgdel,   // Horizontal gate delay (in pixels)
+    input 	[15:0] 	Thgate,   // Horizontal gate length (number of visible pixels per line)
+    input 	[15:0] 	Thlen,    // Horizontal length (number of pixels per line)
 
-	// status outputs
-	output 			eoh, // end of horizontal
-	output 			eov, // end of vertical
-	
-	// pixel data load control
-	output			load_ready,
-	input	[23:0]	load_data,
-	input			load_valid,
+    // Vertical timing settings
+    input 	[ 7:0] 	Tvsync,   // Vertical sync pulse width (in lines)
+    input 	[ 7:0] 	Tvgdel,   // Vertical gate delay (in lines)
+    input 	[15:0] 	Tvgate,   // Vertical gate length (number of visible lines in frame)
+    input	[15:0] 	Tvlen,    // Vertical length (number of lines in frame)
 
-	// pixel related outputs
-	output 			pclk,	// pixel clock out
-	output reg 		hsync, // horizontal sync pulse
-	output reg 		vsync, // vertical sync pulse
-	output reg		blank, // blanking signal
-	output reg		daten,
-	output [23:0] 	pdata
+    // Status outputs
+    output 			eoh,       // End of horizontal
+    output 			eov,       // End of vertical
+
+    // Pixel data load control
+    output			load_ready,
+    input	[23:0]	load_data,
+    input			load_valid,
+
+    // Pixel-related outputs
+    output 			pclk,      // Pixel clock out
+    output reg 		hsync,     // Horizontal sync pulse
+    output reg 		vsync,     // Vertical sync pulse
+    output reg		blank,     // Blanking signal
+    output reg		daten,     // Data enable signal
+    output [23:0] 	pdata      // Pixel data
 );
 
-	wire			gate;
-	wire			pclk_ena;
-	wire 			ihsync;
-	wire			ivsync;
-	wire			iblank;
-	wire			idaten;
-	
-	assign load_ready = gate;
+    wire			gate;
+    wire			pclk_ena;
+    wire 			ihsync;
+    wire			ivsync;
+    wire			iblank;
+    wire			idaten;
 
-	//**********************************************
-	// Pixel Clock generator
-	//**********************************************
-	video_clkgen INST_CLK_GEN (
-		.clk	 	(clk),
-		.rst_n 	 	(rst_n),
-		.pclk	 	(pclk),
-		.pclk_ena 	(pclk_ena)
-	);
-	
-	//**********************************************
-	// Timing generator
-	//**********************************************
-	// hookup video timing generator
-	video_timgen INST_TIMGEN (
-		.clk	 	(clk),
-		.clk_ena 	(pclk_ena),
-		.rst_n 	 	(rst_n),
-		.Thsync  	(Thsync),
-		.Thgdel  	(Thgdel),
-		.Thgate  	(Thgate),
-		.Thlen   	(Thlen),
-		.Tvsync  	(Tvsync),
-		.Tvgdel  	(Tvgdel),
-		.Tvgate  	(Tvgate),
-		.Tvlen   	(Tvlen),
-		.eol     	(eoh),
-		.eof     	(eov),
-		.gate    	(gate),
-		.hsync   	(ihsync),
-		.vsync   	(ivsync),
-		.blank   	(iblank)
-	);
+    assign load_ready = gate;
 
-	always @(posedge clk)
-		if (pclk_ena)
-	    begin
-	        hsync <= ihsync ^ ctrl_hsync_pol;
-	        vsync <= ivsync ^ ctrl_vsync_pol;
-	        blank <= iblank ^ ctrl_blank_pol;
-			daten <= idaten ^ ctrl_daten_pol;
-	    end
-		
+    //**********************************************
+    // Pixel Clock generator
+    //**********************************************
+    video_clkgen INST_CLK_GEN (
+        .clk	 	(clk),
+        .rst_n 	 	(rst_n),
+        .pclk	 	(pclk),
+        .pclk_ena 	(pclk_ena)
+    );
+
+    //**********************************************
+    // Timing generator
+    //**********************************************
+    // Hookup video timing generator
+    video_timgen INST_TIMGEN (
+        .clk	 	(clk),
+        .clk_ena 	(pclk_ena),
+        .rst_n 	 	(rst_n),
+        .Thsync  	(Thsync),
+        .Thgdel  	(Thgdel),
+        .Thgate  	(Thgate),
+        .Thlen   	(Thlen),
+        .Tvsync  	(Tvsync),
+        .Tvgdel  	(Tvgdel),
+        .Tvgate  	(Tvgate),
+        .Tvlen   	(Tvlen),
+        .eol     	(eoh),
+        .eof     	(eov),
+        .gate    	(gate),
+        .hsync   	(ihsync),
+        .vsync   	(ivsync),
+        .blank   	(iblank)
+    );
+
+    always @(posedge clk)
+        if (pclk_ena)
+        begin
+            hsync <= ihsync ^ ctrl_hsync_pol;
+            vsync <= ivsync ^ ctrl_vsync_pol;
+            blank <= iblank ^ ctrl_blank_pol;
+            daten <= idaten ^ ctrl_daten_pol;
+        end
+
 endmodule
